@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css?family=Cousine&display=swap');
+
+body {
+    font-family: 'Cousine', monospace;
+    color: #fff;
+    background: #000;
+}
+
+h1, h2, h3 {
+    color: #e8a901;
+}
+
+table { 
+    width: 100%;
+    border: 2px solid #e8a901;
+    border-collapse: collapse;
+}
+th { 
+    background: #e8a901;
+    padding: 5px;
+    border: 1px solid #e8a901;
+}
+td { 
+    padding: 5px;
+    border: 1px solid #e8a901;
+}
+input {
+    width: 100%;
+    background: none;
+    color: #e8a901;
+    border: none;
+    font-size: 20px;
+}
+button {
+    border: none;
+    font-family: 'Cousine', monospace;
+    font-size: 20px;
+    padding: 10px;
+    border: 2px solid #e8a901;
+    background: none;
+    color: #e8a901;
+}
+button:hover {
+    cursor: pointer;
+    background: #e8a901;
+    color: #fff;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.content {
+    padding: 20px;
+    text-align: center;
+}
+
+.col-50 {
+    width: 48%;
+    margin-right: 2%;
+    float: left;
+}
+.clear {
+    clear: both;
+}
+
+select {
+    background: #000;
+    color: #e8a901;
+}
+
+#dropZone {    
+    color: #fff;
+    font-size: 18px;
+    text-align: center;    
+    width: 100%;
+    padding: 100px 0;
+    margin: 50px auto;
+    
+    background: none;
+    border: 3px dotted #e8a901;
+    
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+#dropZone.hover {
+    background: #e8a901;
+    border-color: #e8a901;
+}
+#dropZone.error {
+    background: none;
+    border-color: #ff0000;
+    color: #ff0000;
+}
+.sentInfo {
+    font-size: 12px;
+    color: #e8a901;
+    margin-top: -40px;
+}
+.display-none {
+    display: none;
+}
+.copyright {
+    font-size: 12px;
+    color: #999;
+    margin-top: 50px;
+    text-align: left;
+}
+.copyright a {
+    color: #999;
+    text-decoration: underline;
+}
+.copyright a:hover {
+    color: #e8a901;
+    text-decoration: underline;
+}

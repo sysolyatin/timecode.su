@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    	<meta charset="utf-8">
+    	<title>REAPER csv to lighting console timecode</title>
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
+    	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    	<link rel="stylesheet" href="/timecode.css" media="screen">
+    	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+		<link rel="manifest" href="/site.webmanifest">
+	</head>
+	<body>
+		<!-- Yandex.Metrika counter -->
+		<script type="text/javascript" >
+		   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+		   m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+		   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+		   ym(69203458, "init", {
+		        clickmap:true,
+		        trackLinks:true,
+		        accurateTrackBounce:true,
+		        webvisor:true
+		   });
+		</script>
+		<noscript><div><img src="https://mc.yandex.ru/watch/69203458" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+		<!-- /Yandex.Metrika counter -->
+		<div class="content">
+			<h1>REAPER csv to lighting console timecode</h1>
+
+			<div id="fileLoadArea">
+				<form action="">
+			      	<div id="dropZone">Drag and drop CSV file from REAPER</div>
+			      	<div class="sentInfo">Sent data will be processed directly on this page without sending to the server</div>
+			    </form>
+			</div>
+
+			<div id="settingArea">
+				<div class="col-50 text-left">
+					<h2 id="cueListName">CueList</h2>
+					<table id="cueListTable">
+						<thead>
+							<tr>
+								<th>Cue</th>
+								<th>Name</th>
+								<th>Time</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+				<div class="col-50 text-left">
+					<div id="choose-console-area">
+						<h2>Choose you lighting console</h2>
+						<button class="choose-console-btn" data-console-name="grandMA2">grandMA 2</button>
+						<button class="choose-console-btn" data-console-name="hog4">HOG 4</button>
+						<button class="choose-console-btn" data-console-name="magicq">MagicQ</button>
+						<button class="choose-console-btn" data-console-name="etc">ETC</button>
+					</div>
+					
+					<div id="setting-form-area">
+						<h2>Timecode Setting</h2>
+						<div id="setting-form">
+							<div id="form-grandMA2" class="console-setting-form">
+								<table>
+									<tr>
+										<td>Sequence number</td>
+										<td><input type="number" id="sequenceNumber" value="1"></td>
+									</tr>
+									<tr>
+										<td>Exec number</td>
+										<td><input type="text" id="execNumber" value="1.1.1"></td>
+									</tr>
+									<tr>
+										<td>FPS</td>
+										<td>
+											<select id="fps">
+												<option value="30">30</option>
+												<option value="25">25</option>
+												<option value="24">24</option>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td>Trigger mode</td>
+										<td>
+											<select id="triggerMode">
+												<option value="Goto">Goto</option>
+												<option value="Go">Go</option>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td>Timecode number</td>
+										<td><input type="number" id="timecodeNumber" value="1"></td>
+									</tr>
+									<tr>
+										<td>Sequence Label</td>
+										<td><input type="text" id="sequenceLabel" value="CueList"></td>
+									</tr>
+									<tr>
+										<td>Page Label</td>
+										<td><input type="text" id="pageLabel" value="Page"></td>
+									</tr>
+								</table>
+								<br>
+								<button id="getTcBtn">Download TC.xml</button>
+								<button id="getMacroBtn">Download M.xml</button>
+								<br><br>
+								You need to put the file TC.xml to the "importexport" directory, and the file M.xml in the "macros" directory.
+								After that you need to import and run the macro from M.xml
+							</div>
+					
+							<div id="form-hog4" class="console-setting-form">
+								<table>
+									<tr>
+										<td>CueList number</td>
+										<td><input type="number" id="hogCueListNumber" value="1"></td>
+									</tr>
+									<tr>
+										<td>CueList Name</td>
+										<td><input type="text" id="hogCueListName" value="CueList"></td>
+									</tr>
+								</table>
+								<br>
+								<button id="getHogTcBtn">Download TC.xml</button>
+							</div>
+					
+							<div id="form-etc" class="console-setting-form">
+								<table>
+									<tr>
+										<td>CueList number</td>
+										<td><input type="number" id="etcCueListNumber" value="1"></td>
+									</tr>
+									<tr>
+										<td>CueList Name</td>
+										<td><input type="text" id="etcCueListName" value="CueList"></td>
+									</tr>
+									<tr>
+										<td>Show List number</td>
+										<td><input type="number" id="etcShowListNumber" value="1"></td>
+									</tr>
+									<tr>
+										<td>Source</td>
+										<td><input type="number" id="etcSource" value="1"></td>
+									</tr>
+									<tr>
+										<td>Input Type</td>
+										<td>
+											<select id="etcInputType">
+												<option value="MIDI">MIDI</option>
+												<option value="SMPTE">SMPTE</option>
+												<option value="ANALOG">ANALOG</option>
+												<option value="RTC">RTC</option>
+												<option value="Network">Network</option>
+											</select>
+										</td>
+									</tr>
+								</table>
+								<br>
+								<button id="getEtcTcBtn">Download TC.csv</button>
+							</div>
+						</div>
+						<br><br>
+						<button id="cancelBtn">Reset and load new csv file</button>
+						<button id="changeConsoleBtn">Change lighting console</button>
+					</div>
+
+					
+				</div>
+				<div class="clear"></div>
+			</div>
+
+			<div class="copyright">
+				REAPER csv to lighting console timecode &copy <a href="https://pingvi.org/">Artem Sysolyatin</a>, 2019-2021<br>
+				The site works in test mode. If you find a bug, please report it by mail me@pingvi.org<br>
+				All rights to the trademarks used belong to their respective owners.
+			</div>
+		</div>
+
+		<script type="text/javascript" src="/timecode.js?v=6"></script>
+	</body>
+</html>

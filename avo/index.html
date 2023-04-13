@@ -1,0 +1,389 @@
+
+<html>
+<head>
+<meta charset="utf-8">
+<title>Avolites Reaper Reader 2</title>
+
+<style type="text/css">
+	body, table, input, select, button{
+		font-family:Tahoma, Helvetica, Arial, sans-serif;
+		font-size:13px;
+	}
+	div{
+		min-height: 25px;
+		padding: 5px;
+	}
+	td {
+		min-width: 60px;
+	}
+	table {
+		cell-spacing: 0px;
+		border-collapse: collapse;
+		cell-padding: 0px;
+	}
+	select {
+		min-width: 200px;
+	}
+	
+</style>
+<script type="text/javascript">
+
+	var debug = true;
+	var linearray = new Array();
+	var linesarray = new Array();
+	var version = 0;
+
+
+	function getCuelists(){
+	
+	// ==================================================================
+	// gets cuelists 
+	// ==================================================================
+	
+		var _ip = document.getElementById("ip").value;
+		var x = document.getElementById("cuelists_select");
+		var len = x.options.length;
+		for (var i_opt = len; i_opt; i_opt--) {
+			par = x.options[i_opt-1].parentNode;
+			par.removeChild(x.options[i_opt-1]);
+		}		
+		x = document.getElementById("timeline_select");
+		len = x.options.length;
+		for (i_opt = len; i_opt; i_opt--) {
+			par = x.options[i_opt-1].parentNode;
+			par.removeChild(x.options[i_opt-1]);
+		}
+		option = document.createElement( 'option' );
+		option.value='';
+		option.text='Select Timeline';
+		document.getElementById('timeline_select').add(option);		
+		
+		var showreq = new XMLHttpRequest();
+		var field_un = "userNumber";
+		var field_le = "legend";
+		var field_ti = "titanId";
+		if (version < 12) {
+		
+			field_un = "UserNumber";
+			field_le = "Legend";
+		}
+		
+		showreq.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+
+				var playbacksArr = JSON.parse(this.responseText);
+				for (var i = 0; i < playbacksArr.length; i++) {
+					option = document.createElement( 'option' );
+					option.value = playbacksArr[i][field_ti];
+					option.text = playbacksArr[i][field_le] + " (" + playbacksArr[i][field_ti] + ")";
+					if (playbacksArr[i]["type"] == 'cueListHandle') {
+						document.getElementById('cuelists_select').add(option);
+					} else if (playbacksArr[i]["type"] == 'timelineHandle') {
+						if (playbacksArr[i][field_le] =='') {
+							option.text = "Timeline " + (playbacksArr[i]["userNumber"]["userNumbers"][0]) + " (" + playbacksArr[i][field_ti] + ")";
+						}
+						document.getElementById('timeline_select').add(option);
+					}
+				}
+			}
+		};
+		showreq.open("GET", "http://" + _ip + ":4430/titan/handles/Playbacks", true);
+		showreq.send();
+	}
+	
+	function getShow(){
+	
+	// ==================================================================
+	// gets showname 
+	// ==================================================================
+	
+		var _ip = document.getElementById("ip").value;
+		var showreq = new XMLHttpRequest();
+		
+		showreq.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("show_div").innerHTML = "Show: " + this.responseText;
+				if (version < 12) document.getElementById("show_div").innerHTML += "<br><br><strong>Titan Version below 12 is currently not supported</strong><br><br>";
+				getCuelists();
+			}
+		};
+		showreq.open("GET", "http://" + _ip + ":4430/titan/get/Show/ShowName", true);
+		showreq.send();
+	}
+	
+	function testIP(){
+	
+	// ==================================================================
+	// requests software version
+	// ==================================================================
+	
+		document.getElementById("show_div").innerHTML = "";
+		
+		var test="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$";
+		var _ip = document.getElementById("ip").value;
+		
+		if ((_ip.match(test)) || (_ip == "localhost")) {
+		
+			if ((_ip != "localhost") && (window.location.protocol != "file:")) alert ("If you want to connect to Titan on another machine, \n"
+											+ "either change the CORS security settings of your browser, or \n"
+											+ "save this page locally and double-click it");
+			
+			var versionreq = new XMLHttpRequest();
+			
+			try {
+				versionreq.onreadystatechange = function() {
+					if (this.readyState == 4){
+						if (this.status == 200) {
+							if (this.responseText.length > 0){
+								version = this.responseText.substr(1, 2);
+							} 
+						} else {
+							alert ("Error sending the request.\n\nPossible issues:\n"
+							+ "- IP address not correct\n- no network connection\n"
+							+ "- Titan (console or PC suite) not running\n"
+							+ "- Firewall settings (unlikely)\n\n"
+							+ "If you want to connect to Titan on another machine, \n"
+							+ "either change the CORS security settings of your browser, or \n"
+							+ "save this page locally and double-click it"); 
+						}
+					} else {
+						// alert ("Problem");
+					}
+				}
+				versionreq.open("GET", "http://" + _ip + ":4430/titan/get/System/SoftwareVersion", false);
+				versionreq.send();
+			} catch(e) {
+				alert ("Error sending the request.\n\nPossible issues:\n"
+				+ "- IP address not correct\n- no network connection\n"
+				+ "- Titan (console or PC suite) not running\n"
+				+ "- Firewall settings (unlikely)\n\n"
+				+ "If you want to connect to Titan on another machine, \n"
+				+ "either change the CORS security settings of your browser, or \n"
+				+ "save this page locally and double-click it"); 
+			}
+			getShow();
+		} else {
+			alert ("IP address not valid: " + _ip, "error");
+		}
+	}
+
+	function init(){
+		
+	// ==================================================================
+	// called upon page load. 
+	// adds event listener for file import (because called onload)
+	// ==================================================================
+	
+		document.getElementById('fileinput').addEventListener('change', readSingleFile, false);
+	}
+	
+	function send(){
+	
+		var clId = document.getElementById('cuelists_select').value;
+		var tlId = document.getElementById('timeline_select').value;
+		var _ip = document.getElementById("ip").value;
+		var trId;
+		
+		for	(var i = 1; i < linearray.length; i++){
+			cueNumber = linearray[i][0].replace('M', '');
+			cueNumber = cueNumber.replace('R', '');
+
+			// check if cue exists, append cue if it doesn't
+	
+			var checkreq = new XMLHttpRequest();
+		
+			if (version >= 12) {
+				checkreq.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if (this.responseText != "true"){
+						
+							var insertreq = new XMLHttpRequest();
+							insertreq.onreadystatechange = function() {
+								if (this.readyState == 4 && this.status == 200) {
+								}
+							}
+							insertreq.open("GET", "http://" + _ip + ":4430/titan/script/2/Playbacks/AppendOrInsertPlaybackCue?handle_titanId=" + clId + "&cueNumber=" + cueNumber, false);
+							insertreq.send();
+						}
+					}
+				};
+				checkreq.open("GET", "http://" + _ip + ":4430/titan/script/2/Playbacks/DoesCueExist?handle_titanId=" + clId + "&cueNumber=" + cueNumber, false);
+				checkreq.send();
+			}
+			
+			
+			// set cue legend
+			
+			var update1req = new XMLHttpRequest();
+			update1req.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					if (this.responseText != "true"){
+			
+					}
+				}
+			};
+			update1req.open("GET", "http://" + _ip + ":4430/titan/script/2/Playbacks/SetCueLegend?handle_titanId=" + clId + "&cueNumber=" + cueNumber + "&newLegend=" + linearray[i][1], false);
+			update1req.send();
+		
+		
+			// set cue timecode
+				
+			var update2req = new XMLHttpRequest();
+			update2req.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					if (this.responseText != "true"){
+					
+					}
+				}
+			};
+			var timecodeTime = getTimecodeTime(linearray[i][2]);
+			update2req.open("GET", "http://" + _ip + ":4430/titan/script/2/Timecode/SetCueTimecodeWithCueNumber?handle_titanId=" + clId + "&cueNumber=" + cueNumber + "&time=" + timecodeTime, false);
+			update2req.send();
+		}
+		
+		if (tlId != '') {
+
+			// alert ("tlId set, updating timeline...");
+			
+			// add track
+			
+			var addTracReq = new XMLHttpRequest();
+			
+			addTracReq.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					if (this.responseText != "true"){
+					var responseArr = JSON.parse(this.responseText);
+					// alert("track titan ID: " + responseArr["titanId"]);
+					trId = responseArr["titanId"];
+					}
+				}
+			};
+
+			addTracReq.open("GET", "http://" + _ip + ":4430/titan/script/2/Timelines/CreateTimelineTrack?timelineId=" + tlId + "&legend=new%20track", false);
+			addTracReq.send();
+			
+			// add cuelist to track
+			
+			// alert ("adding cuelist ID " + clId + " to Timeline ID " + tlId + " track ID " + trId + " now");
+			
+			var addCuelistReq = new XMLHttpRequest();
+			
+			addCuelistReq.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					if (this.responseText != "true"){
+					
+					}
+				}
+			};
+
+			addCuelistReq.open("GET", "http://" + _ip + ":4430/titan/script/2/Timelines/CreatePlaybackTriggerReference?timelineId=" + tlId + "&trackId=" + trId + "&time=00:00:00.00&sourceHandles_string=cueListHandleID:" + clId + "&preload=false&preloadTime=0&cuelistGoMode=Timecode&flashOptions=0&flashPair=0&referencePlaybackCopies=false", false);
+			addCuelistReq.send();
+		
+		} // end if tlId set
+	
+	} // end function
+	
+	function updateCues(){
+	
+	// ==================================================================
+	// updates displayed cues
+	// ==================================================================
+	
+		var test="^(?:[0-9]{1,2}\:){3}[0-9]{1,2}$";
+		var tcerr = false;
+		document.getElementById("cues").innerHTML = "";
+		table = "<table><tr><th>Cue #</th><th>Legend</th><th>Timecode</th></tr>";
+		
+		for	(var i = 1; i < linearray.length; i++){
+			table += "<tr><td>" + linearray[i][0] + "</td><td>" + linearray[i][1] + "</td><td>";
+			linearray[i][2] = linearray[i][2].replace( /[\r\n]+/gm, "" ); 
+			tcerr = !(linearray[i][2].match(test));
+			
+			if (tcerr) table += "<b>";
+			
+			table += linearray[i][2];
+			
+			if (tcerr) table += " -- wrong timecode format! Change timeline format in Reaper and export again.</b>";
+			
+			table += "</td></tr>";
+		}
+		
+		table += "</table>";
+		document.getElementById("cues").innerHTML = table;
+		if (version < 12) {
+			document.getElementById("cues").innerHTML += "<br><br><strong>Titan Version below 12 is currently not supported</strong>"
+		} else {
+			document.getElementById("cues").innerHTML += "<br><br><button onclick='send()'>Send</button>"
+		}
+	}
+
+	function getTimecodeTime(reaperTime) {
+		var parts = reaperTime.split(":");
+		var fps = Number(document.getElementById('fps_select').value);
+		var result = parts[0] + ":" + parts[1] + ":" + parts[2] + ":";
+		var frames = Number(parts[3]) * (100 / fps);
+		return result + frames.toString().split(".")[0];
+	}
+	
+	function readSingleFile(evt) {
+	
+	// ==================================================================
+	// retrieves and parses file
+	// event listener registered in init() 
+	// ==================================================================
+
+		var f = evt.target.files[0]; 
+
+		if (f) {
+			var r = new FileReader();
+			r.onload = function(e) { 
+				var contents = e.target.result;
+				if (contents.substr(0, 12) == "#,Name,Start"){
+					var lines = contents.split('\n');
+					linearray = [];
+					for	(var line = 1; line < lines.length; line++){
+						if (lines[line].length > 4 ) {
+							linearray[line] = lines[line].split(",");
+						}
+					}
+					updateCues();
+				} else {
+					alert ("file not valid: " + f.name);
+				}
+			}
+			r.readAsText(f);
+		} else { 
+			alert ("Failed to load file");
+		}
+	}	
+</script>
+</head>
+<body onload="init();">
+
+	<h2>Avolites Reaper Sender</h2>
+	
+	</small><br>
+	<div id="ip_div">
+		IP: <input type="text" size="15" id="ip" value="localhost"> <button type="button" onclick="testIP()">Test IP</button>
+	</div>
+	<div id="show_div">
+	</div>
+	<div id="cuelists_div">
+		<select id="timeline_select">
+			<option value="" selected disabled hidden>Which Timeline to update?</option>
+		</select>
+		<select id="cuelists_select">
+			<option value="" selected disabled hidden>Which Cuelist to update?</option>
+		</select>
+		<select id="fps_select">
+			<option value="24">24 FPS</option>
+			<option value="25">25 FPS</option>
+			<option value="30">30 FPS</option>
+		</select>
+	</div>
+	<div id="file_div">
+		Reaper CSV file: <input type="file" id="fileinput" name="load" />
+	</div>
+	<div id="cues">
+	</div>
+</body></html>
